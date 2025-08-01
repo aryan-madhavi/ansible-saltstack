@@ -1,0 +1,55 @@
+- name: Launch a server for jenkins
+  hosts: localhost
+  gather_facts: False
+
+  tasks:
+    - name: Launch the EC2 instance
+      amazon.aws.ec2_instance:
+        name: jenkins-server
+        key_name: ansible-key-pair
+        region: ap-south-1
+        instance_type: t3.small
+        image_id: ami-0d0ad8bb301edb745
+        wait: True
+        count: 1
+        security_group: sg-02d290fb435aa47d1
+        iam_instance_profile: EC2-SSM-role
+        user_data: |
+          #!/bin/bash
+          yum update -y
+          yum install fontconfig wget git curl java-17 -y
+          wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+          rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+          yum upgrade -y
+          yum install jenkins -y
+          systemctl daemon-reload
+          systemctl enable jenkins && systemctl start jenkins
+      register: instance
+
+    - name: Show the Instance ID of the launched EC2 instance
+      ansible.builtin.debug:
+        msg:  |
+          The EC2 instance ID is {{ instance.instances[0].instance_id }}
+          The EC2 public DNS is {{ instance.instances[0].public_dns_name }}
+
+    - name: Wait for Jenkins Instance to be accessible via SSM
+      ansible.builtin.wait_for:
+        host: "{{ instance.instances[0].public_dns_name }}"
+        port: 8080
+        state: started
+
+    - name: Retrieve initialAdminPassword via SSM
+      shell: |
+        aws ssm send-command \
+          --document-name "AWS-RunShellScript" \
+          --region ap-south-1 \
+          --instance-ids "{{ instance.instances[0].instance_id }}" \
+          --parameters 'commands=["sudo cat /var/lib/jenkins/secrets/initialAdminPassword"]' \
+          --output text
+      register: initial_admin_password
+
+    - name: Display Jenkins Credentials
+      ansible.builtin.debug:
+        msg: |
+          Jenkins URL: {{ instance.instances[0].public_dns_name }}:8080
+          Password: {{ initial_admin_password }}
