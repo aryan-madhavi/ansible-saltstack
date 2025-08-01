@@ -1,0 +1,53 @@
+---
+- name: Launch Salt Master, Linux Minion, and Windows Minion EC2 Instances
+  hosts: localhost
+  gather_facts: false
+
+  vars_files:
+    - vars/cluster_vars.yml
+
+  tasks:
+
+    - name: Launch Salt Master first
+      amazon.aws.ec2_instance:
+        name: "{{ instances[0].name }}"
+        key_name: "{{ key_name }}"
+        region: "{{ region }}"
+        instance_type: "{{ linux_instance_type }}"
+        image_id: "{{ instances[0].ami_id }}"
+        wait: true
+        count: 1
+        user_data: "{{ instances[0].user_data }}"
+        tags:
+          Name: "{{ instances[0].name }}"
+          Role: "{{ instances[0].role }}"
+      register: master_result
+
+    - name: Save master private IP
+      set_fact:
+        master_private_ip: "{{ master_result.instances[0].private_ip_address }}"
+
+    - name: Launch all other instances
+      loop: "{{ instances[1:] }}"
+      loop_control:
+        loop_var: instance
+      amazon.aws.ec2_instance:
+        name: "{{ instance.name }}"
+        key_name: "{{ key_name }}"
+        region: "{{ region }}"
+        instance_type: "{{ instance.instance_type }}"
+        image_id: "{{ instance.ami_id }}"
+        wait: true
+        count: 1
+        user_data: "{{ lookup('template', instance.user_data_template) }}"
+        tags:
+          Name: "{{ instance.name }}"
+          Role: "{{ instance.role }}"
+      register: instance_results
+
+    - name: Output public IPs
+      debug:
+        msg:
+          - "Salt Master: {{ master_result.instances[0].public_ip_address }}"
+          - "Linux Minion: {{ instance_results.results[0].instances[0].public_ip_address }}"
+          - "Windows Minion: {{ instance_results.results[1].instances[0].public_ip_address }}"

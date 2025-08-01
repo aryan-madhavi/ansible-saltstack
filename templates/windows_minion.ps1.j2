@@ -1,0 +1,6 @@
+<powershell>
+Invoke-WebRequest -Uri "https://packages.broadcom.com/artifactory/saltproject-generic/windows/3006.14/Salt-Minion-3006.14-Py3-AMD64-Setup.exe" -OutFile "C:\Salt-Setup.exe"
+Start-Process -FilePath "C:\Salt-Setup.exe" -ArgumentList "/S", "/master={{ master_private_ip }}", "/minion-name=win-minion-1" -Wait
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+Restart-Service salt-minion
+</powershell>
