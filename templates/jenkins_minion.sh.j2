@@ -1,0 +1,20 @@
+#!/bin/bash
+yum update -y
+
+curl -fsSL https://github.com/saltstack/salt-install-guide/releases/latest/download/salt.repo | sudo tee /etc/yum.repos.d/salt.repo
+
+wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+
+yum upgrade -y
+dnf clean expire-cache
+
+dnf install fontconfig wget git curl java-17 -y
+dnf install salt-minion jenkins -y
+
+mkdir -p /etc/salt/minion.d
+echo "master: {{ master_private_ip }}" > /etc/salt/minion.d/master.conf
+
+systemctl daemon-reload
+systemctl enable salt-minion && systemctl start salt-minion
+systemctl enable jenkins && systemctl start jenkins

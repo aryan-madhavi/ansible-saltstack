@@ -5,6 +5,8 @@ security_group_ids: sg-02d290fb435aa47d1
 linux_instance_type: t2.micro
 linux_ami_id: ami-0d0ad8bb301edb745
 
+jenkins_instance_type: t3.small
+
 windows_instance_type: t3.micro
 windows_ami_id: ami-05b85154f69f6bcb3
 
@@ -21,8 +23,14 @@ instances:
     ami_id: "{{ linux_ami_id }}"
     user_data_template: templates/linux_minion.sh.j2
 
-  - name: windows-minion
+  - name: jenkins-minion
     role: salt-minion
-    instance_type: "{{ windows_instance_type }}"
-    ami_id: "{{ windows_ami_id }}"
-    user_data_template: templates/windows_minion.ps1.j2
+    instance_type: "{{ jenkins_instance_type }}"
+    ami_id: "{{ linux_ami_id }}"
+    user_data_template: templates/jenkins_minion.sh.j2
+
+#  - name: windows-minion
+#    role: salt-minion
+#    instance_type: "{{ windows_instance_type }}"
+#    ami_id: "{{ windows_ami_id }}"
+#    user_data_template: templates/windows_minion.ps1.j2
