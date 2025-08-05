@@ -16,6 +16,7 @@
         region: "{{ region }}"
         instance_type: "{{ linux_instance_type }}"
         image_id: "{{ instances[0].ami_id }}"
+        security_group: "{{ sec_grp }}"
         wait: true
         count: "{{ instances[0].count }}"
         user_data: "{{ instances[0].user_data }}"
@@ -38,6 +39,7 @@
         region: "{{ region }}"
         instance_type: "{{ instance.instance_type }}"
         image_id: "{{ instance.ami_id }}"
+        security_group: "{{ sec_grp }}"
         wait: true
         count: "{{ instance.count }}"
         user_data: "{{ lookup('template', instance.user_data_template) }}"
@@ -48,7 +50,4 @@
 
     - name: Output public IPs
       debug:
-        msg:
-          - "Salt Master: {{ master_result.instances[0].public_ip_address }}"
-          - "Linux Minion 1: {{ instance_results.results[0].instances[0].public_ip_address }}"
-          - "Linux Minion 2: {{ instance_results.results[1].instances[0].public_ip_address }}"
+        msg: instance_results
