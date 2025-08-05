@@ -37,6 +37,7 @@
         host: "{{ instance.instances[0].public_dns_name }}"
         port: 8080
         state: started
+        delay: 60
 
     - name: Retrieve initialAdminPassword via SSM
       shell: |
