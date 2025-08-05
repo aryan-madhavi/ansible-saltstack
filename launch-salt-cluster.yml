@@ -18,6 +18,7 @@
         wait: true
         count: 1
         user_data: "{{ instances[0].user_data }}"
+        iam_instance_profile: EC2-SSM-role
         tags:
           Name: "{{ instances[0].name }}"
           Role: "{{ instances[0].role }}"
@@ -40,6 +41,7 @@
         wait: true
         count: 1
         user_data: "{{ lookup('template', instance.user_data_template) }}"
+        iam_instance_profile: EC2-SSM-role
         tags:
           Name: "{{ instance.name }}"
           Role: "{{ instance.role }}"
